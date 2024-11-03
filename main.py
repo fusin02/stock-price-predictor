@@ -16,7 +16,7 @@ def runPrediction(stock):
             stocks_hist = pd.read_json(DATA_PATH)
     else:
         # Fetch data from Yahoo Finance if file does not exist
-        stocks_hist = yf.download(stock, period="5y")
+        stocks_hist = yf.download(stock, period="6mo")
         
         # Saving data to file
         stocks_hist.to_json(DATA_PATH)
@@ -65,8 +65,8 @@ def runPrediction(stock):
             
             preds = model.predict_proba(test[predictors])[:,1]
             preds = pd.Series(preds, index=test.index)
-            preds[preds > 0.6] = 1
-            preds[preds <= 0.6] = 0
+            preds[preds > 0.55] = 1
+            preds[preds <= 0.55] = 0
             combined = pd.concat({"Target": test["Target"], "Predictions": preds}, axis=1)
             predictions.append(combined)
             
@@ -84,11 +84,11 @@ def runPrediction(stock):
                 stock_to_buy = capital / stock_price.iloc[i]
                 stock_held += stock_to_buy
                 capital = 0
-                print(f"Buying {stock_to_buy} stock at {stock_price.iloc[i]}, {i}")
+                print(f"Buying {stock_to_buy} stock at {stock_price.iloc[i]}, Day {i + 1}")
                 
             elif predictions["Predictions"].iloc[i] == 0 and stock_held > 0:
                 # If prediction is to sell (price will go down), sell stock
-                print(f"Selling {stock_held} stock at {stock_price.iloc[i]}, {i}")
+                print(f"Selling {stock_held} stock at {stock_price.iloc[i]}, Day {i + 1}")
                 capital += stock_held * stock_price.iloc[i]
                 stock_held = 0  # Sold all the stock
 
@@ -97,8 +97,19 @@ def runPrediction(stock):
         return final_value
 
     # Running the backtest
-    print(data)
     predictions = backtest(data, model, full_predictors)
-    print(simulate_trading(data, predictions))
-    
-runPrediction("PLTR")
+    print(predictions)
+    end_capital = simulate_trading(data, predictions)
+    print(f"Final value: {end_capital}")
+    return end_capital
+
+def test(stocks):
+        gainer = 0
+        loser = 0
+        for stock in stocks:
+            if runPrediction(stock) > 10000:
+                gainer += 1
+        print(gainer / len(stocks) * 100)
+        print(loser / len(stocks) * 100)
+        
+test(["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "NVDA", "PYPL", "ADBE", "INTC"])

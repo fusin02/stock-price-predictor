@@ -112,4 +112,4 @@ def test(stocks):
         print(gainer / len(stocks) * 100)
         print(loser / len(stocks) * 100)
         
-test(["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "NVDA", "PYPL", "ADBE", "INTC"])
+test(["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "NVDA", "PYPL", "ADBE"])
